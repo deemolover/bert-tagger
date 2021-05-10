@@ -1,0 +1,71 @@
+backcall==0.2.0
+blis==0.7.4
+brotlipy==0.7.0
+catalogue==2.0.4
+certifi==2020.12.5
+cffi @ file:///tmp/build/80754af9/cffi_1605538037615/work
+chardet @ file:///tmp/build/80754af9/chardet_1605303159953/work
+click==7.1.2
+conda==4.9.2
+conda-package-handling @ file:///tmp/build/80754af9/conda-package-handling_1603018138503/work
+cryptography @ file:///tmp/build/80754af9/cryptography_1605544449973/work
+cupy-cuda92==8.6.0
+cymem==2.0.5
+decorator==5.0.7
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
+fastrlock==0.6
+filelock==3.0.12
+idna @ file:///tmp/build/80754af9/idna_1593446292537/work
+importlib-metadata==4.0.1
+ipykernel==5.5.4
+ipython==7.23.1
+ipython-genutils==0.2.0
+jedi==0.18.0
+Jinja2==2.11.3
+joblib==1.0.1
+jupyter-client==6.2.0
+jupyter-core==4.7.1
+MarkupSafe==1.1.1
+matplotlib-inline==0.1.2
+murmurhash==1.0.5
+nest-asyncio==1.5.1
+nltk==3.6.2
+numpy==1.20.2
+packaging==20.9
+parso==0.8.2
+pathy==0.5.2
+pexpect==4.8.0
+pickleshare==0.7.5
+preshed==3.0.5
+prompt-toolkit==3.0.18
+ptyprocess==0.7.0
+pycosat==0.6.3
+pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
+pydantic==1.7.3
+Pygments==2.9.0
+pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1605545627475/work
+pyparsing==2.4.7
+PySocks @ file:///tmp/build/80754af9/pysocks_1594394576006/work
+python-dateutil==2.8.1
+pyzmq==22.0.3
+regex==2021.4.4
+requests @ file:///tmp/build/80754af9/requests_1592841827918/work
+ruamel-yaml==0.15.87
+sacremoses==0.0.45
+six @ file:///tmp/build/80754af9/six_1605205313296/work
+smart-open==3.0.0
+spacy==3.0.6
+spacy-legacy==3.0.5
+srsly==2.4.1
+thinc==8.0.3
+tokenizers==0.10.2
+tornado==6.1
+tqdm @ file:///tmp/build/80754af9/tqdm_1605303662894/work
+traitlets==5.0.5
+transformers==4.5.1
+typer==0.3.2
+typing-extensions==3.10.0.0
+urllib3 @ file:///tmp/build/80754af9/urllib3_1603305693037/work
+wasabi==0.8.2
+wcwidth==0.2.5
+zipp==3.4.1

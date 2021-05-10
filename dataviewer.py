@@ -8,8 +8,12 @@ import random
 import torch
 import numpy as np
 
-WIKI_DIR = "/data/disk5/private/yuc/coref/wikipedia/text"
-DUMP_DIR = "/data/disk5/private/yuc/coref/bert-tagger/playground/dump_kl"
+WORK_DIR = "/data/disk5/private/yuc/coref/bert-tagger"
+FILE_LIST = "filelist.txt"
+WIKI_DIR = os.path.join(WORK_DIR, "../wikipedia/text")
+# DUMP_DIR =  os.path.join(WORK_DIR, "playground/dump")
+DUMP_DIR = os.path.join(WORK_DIR, "playground/dump_kl_para")
+LOG_DIR = os.path.join(WORK_DIR, "playground/logs")
 CLEANED_DUMP_DIR = "/data/disk5/private/yuc/coref/bert-tagger/playground/dump_kl_cleaned"
 
 def get_dump_file_list():
@@ -36,12 +40,12 @@ def get_dump_file_list():
     counter_list.sort()
     file_list.sort(key=lambda x: get_counter(x[1]))
 
-def load_from_pickle(counters):
+def load_from_pickle(counters, dump_dir):
     rel_list = []
     stc_dict = {}
     for counter in counters:
-        rel_path = os.path.join(DUMP_DIR, "relation_list_cnt_{}.dump".format(counter))
-        stc_path = os.path.join(DUMP_DIR, "sentence_dict_cnt_{}.dump".format(counter))
+        rel_path = os.path.join(dump_dir, "relation_list_cnt_{}.dump".format(counter))
+        stc_path = os.path.join(dump_dir, "sentence_dict_cnt_{}.dump".format(counter))
         with open(rel_path, "rb") as rel_file, open(stc_path, "rb") as stc_file:
             part_rel_list = pickle.load(rel_file)
             part_stc_dict = pickle.load(stc_file)
@@ -49,12 +53,12 @@ def load_from_pickle(counters):
             stc_dict.update(part_stc_dict)
     return rel_list, stc_dict
 
-def load_from_json(counters):
+def load_from_json(counters, dump_dir):
     rel_list = []
     stc_dict = {}
     for counter in counters:
-        rel_path = os.path.join(CLEANED_DUMP_DIR, "relation_list_cnt_{}.dump".format(counter))
-        stc_path = os.path.join(CLEANED_DUMP_DIR, "sentence_dict_cnt_{}.dump".format(counter))
+        rel_path = os.path.join(dump_dir, "relation_list_cnt_{}.dump".format(counter))
+        stc_path = os.path.join(dump_dir, "sentence_dict_cnt_{}.dump".format(counter))
         with open(rel_path, "r") as rel_file, open(stc_path, "r") as stc_file:
             part_rel_list = [ json.loads(line.strip()) for line in rel_file ] 
             part_stc_list = [ json.loads(line.strip()) for line in stc_file ]
@@ -62,16 +66,21 @@ def load_from_json(counters):
             stc_dict.update({ stc["id"]:stc["context"] for stc in part_stc_list })
     return rel_list, stc_dict
 
-def get_rel_and_stc(counters):
+def get_rel_and_stc(counters, dump_dir=DUMP_DIR):
     
-    rel_list, stc_dict = load_from_json(counters)
+    rel_list, stc_dict = load_from_json(counters, dump_dir)
 
     def sort_relations(relations):
         return relations.sort(key=lambda x:x["distance"], reverse=True)
     def human_readable_relation(relation):
         context = stc_dict[relation["context"]]
-        missing_token = context[relation["missing_index"]]
-        masked_token = context[relation["masked_index"]]
+        # x-1 for the added special tokens at start
+        try:
+            missing_token = [ context[x-1] for x in relation["missing_index"] ]
+            masked_token = [ context[x-1] for x in relation["masked_index"] ]
+        except IndexError:
+            print(context, relation)
+            exit()
         distance = relation["distance"]
         
         if type(distance) == torch.Tensor:
@@ -100,6 +109,7 @@ def get_rel_and_stc(counters):
         print("relation count: ", len(relations))
         for rel_id, relation in enumerate(relations):
             human_readable_relation(relation)
+            
         if do_sort:
             sort_relations(relations)
         print("top 5:")
@@ -132,7 +142,8 @@ def get_rel_and_stc(counters):
     analyze_context(421)
     analyze_context(422)
     
-get_rel_and_stc(list(range(500, 150000, 500)))
+get_rel_and_stc(list(range(500, 10000, 500)),
+                dump_dir=DUMP_DIR)
 
         
 

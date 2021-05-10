@@ -235,7 +235,7 @@ class SaveManager:
         self.stc_template = os.path.join(dump_dir, "sentence_dict_cnt_{}.dump")
 
     def load_progress(self):
-        return (0, 0)
+        # return (0, 0)
 
         if os.path.exists(self.progress_path):
             with open(self.progress_path, "r") as p_log:
