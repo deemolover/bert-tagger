@@ -1,6 +1,7 @@
 
 import os
 import sys
+import argparse
 import time
 import collections
 import json
@@ -18,12 +19,27 @@ work_dir_dict = {
     "234-2": "/data/disk5/private/yuc/coref/bert-tagger",
     "cluster": "/home/shiyukai/project/yuc/coref/bert-tagger"
 }
-loc = sys.argv[1]
+server_list = ["234-2", "cluster"]
+parser = argparse.ArgumentParser(description='Arguments for data processing.')
+parser.add_argument('location', choices=server_list,
+                    help='Indicate the server this script is running on.')
+parser.add_argument('--log', dest='log_interval', type=int, default=1000000,
+                    help='Set log interval for the process.')
+parser.add_argument('--save', dest='save_interval', type=int, default=5000,
+                    help='Set save interval for the process.')
+parser.add_argument('--batch', dest='batch_size', type=int, default=2000,
+                    help='Batch size used by SpaCy models.')
+args = parser.parse_args()
+loc = args.location
 if loc in work_dir_dict.keys():
     WORK_DIR = work_dir_dict[loc]
 else:
     print("Input: ", loc, "  Valid keys: ", " ".join(work_dir_dict.keys()))
     exit()
+default_log_interval = args.log_interval
+default_save_interval = args.save_interval
+default_batch_size = args.batch_size
+print("log interval: ", default_log_interval, "  save interval: ", default_save_interval)
 
 FILE_LIST = os.path.join(WORK_DIR, "playground/filelist.txt")
 WIKI_DIR = os.path.join(WORK_DIR, "../wikipedia/text")
@@ -33,9 +49,10 @@ nlp = spacy.load("en_core_web_sm")
 print("Global initialization completed.")
 
 def default_transform(sentence):
-    if sentence[0] == "<":
+    sentence = sentence.strip()
+    if len(sentence) == 0: # empty
         return None
-    if len(sentence.strip()) == 0: # empty
+    if sentence[0] == "<":
         return None
     sent = sentence.split()
     # sent = word_tokenize(sentence)
@@ -65,7 +82,8 @@ class SentenceIterable:
     def sentence_generator(self):
         # yield from self._sentence_generator()
 
-        for doc, context in nlp.pipe(self.spacy_style_generator(), batch_size=2000, as_tuples=True):
+        for doc, context in nlp.pipe(self.spacy_style_generator(), 
+                batch_size=default_batch_size, as_tuples=True):
             sentence = { "sentence": doc, }
             sentence.update(context)
             yield sentence
@@ -241,7 +259,7 @@ class SaveManager:
         if self.counter % self.save_interval == 0:
             save_path = self.stc_template.format(self.counter)
             self.save_sentence_list(save_path)
-            self.dump_progress()
+            self.dump_progress(sentence["file_id"], sentence["sent_id"])
             self.sentence_list = []
 
     def save_sentence_list(self, save_path):
@@ -274,38 +292,7 @@ class StopWatch:
         self.ticks.clear()
 
         
-def main():
-    log_interval = 1000
-    save_interval = 5000
-    parser = SpacySentenceParser()
-    save_manager = SaveManager(save_interval=save_interval)
-    file_id, sent_id = save_manager.load_progress()
-    dataset = SentenceIterable(file_id=file_id, sent_id=sent_id)
-
-    counter = 0
-    bin_width = 8
-    len_count = collections.defaultdict(int)
-    watch = StopWatch()
-    watch.start()
-    for example in dataset:
-        sentence = example["sentence"]
-        len_count[len(sentence) // bin_width] += 1
-        counter += 1
-        if counter % log_interval == 0:
-            interval = watch.tick()
-            total = watch.total_elapsed()
-            print("sentence count: {0}  current speed: {1:.4f} sent/s  speed on average: {2:.4f} sent/s".format(
-                    counter, log_interval / interval, counter / total
-            ))
-        parser.parse(example)
-        continue
-        save_manager.update_sentence(example)
-
-    watch.tick()
-    total = watch.total_elapsed()
-    print("sentence count: {0} total time cost: {1:.4f} s,  average: {2:.4f} sent/s".format(
-         counter, total, counter / total
-    ))
+def data_analysis(len_count, counter, bin_width):
     sum = 0
     max_key = 0
     for key, value in len_count.items(): 
@@ -322,9 +309,49 @@ def main():
         if sum / counter > 0.997:
             break
     print("average length: ", average)
-    with open("len_count.json", "w") as f:
+    time_stamp = (int(time.time()) // 3600) % 1000000
+    with open(os.path.join(DUMP_DIR, "len_count_{:06d}.json".format(time_stamp)), "w") as f:
         json.dump(len_count, f)
 
+
+def main():
+    log_interval = default_log_interval
+    save_interval = default_save_interval
+    parser = SpacySentenceParser()
+    save_manager = SaveManager(save_interval=save_interval)
+    # file_id, sent_id = save_manager.load_progress()
+    file_id, sent_id = 0, 0
+    dataset = SentenceIterable(file_id=file_id, sent_id=sent_id)
+
+    counter = 0
+    bin_width = 8
+    len_count = collections.defaultdict(int)
+    watch = StopWatch()
+    watch.start()
+    for example in dataset:
+        sentence = example["sentence"]
+        len_count[len(sentence) // bin_width] += 1
+        counter += 1
+        if log_interval > 0 and counter % log_interval == 0:
+            interval = watch.tick()
+            total = watch.total_elapsed()
+            print("sentence count: {0}  current speed: {1:.4f} sent/s  speed on average: {2:.4f} sent/s".format(
+                    counter, log_interval / interval, counter / total
+            ))
+            break
+        parser.parse(example)
+        if save_interval > 0:
+            save_manager.update_sentence(example)
+        
+
+    watch.tick()
+    total = watch.total_elapsed()
+    print("sentence count: {0} total time cost: {1:.4f} s,  average: {2:.4f} sent/s".format(
+         counter, total, counter / total
+    ))
+
+    data_analysis(len_count, counter, bin_width)
+    
 
 if __name__ == "__main__":
     main()
