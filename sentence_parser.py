@@ -81,12 +81,12 @@ class SentenceIterable:
 
     def sentence_generator(self):
         # yield from self._sentence_generator()
-
-        for doc, context in nlp.pipe(self.spacy_style_generator(), 
-                batch_size=default_batch_size, as_tuples=True):
-            sentence = { "sentence": doc, }
-            sentence.update(context)
-            yield sentence
+        with nlp.select_pipes(enable="parser"):
+            for doc, context in nlp.pipe(self.spacy_style_generator(), 
+                    batch_size=default_batch_size, as_tuples=True):
+                sentence = { "sentence": doc, }
+                sentence.update(context)
+                yield sentence
 
     def spacy_style_generator(self):
         for sentence in self._sentence_generator():
@@ -339,7 +339,6 @@ def main():
             print("sentence count: {0}  current speed: {1:.4f} sent/s  speed on average: {2:.4f} sent/s".format(
                     counter, log_interval / interval, counter / total
             ))
-            break
         parser.parse(example)
         if save_interval > 0:
             save_manager.update_sentence(example)
