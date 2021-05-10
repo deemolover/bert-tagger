@@ -103,6 +103,7 @@ class SentenceIterable:
             for file_id, file_path in enumerate(f_list):
                 if file_id < self.file_id:
                     continue
+                file_path = os.path.join(WIKI_DIR, file_path)
                 with open(file_path.strip()) as fs:
                     for sent_id, sentence in enumerate(fs):
                         if file_id == self.file_id and sent_id <= self.sent_id:
