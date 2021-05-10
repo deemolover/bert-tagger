@@ -1,5 +1,6 @@
 
 import os
+import sys
 import time
 import collections
 import json
@@ -13,7 +14,17 @@ import spacy
 # from transformers import BertTokenizer
 
 print("Global initialization started.")
-WORK_DIR = "/data/disk5/private/yuc/coref/bert-tagger"
+work_dir_dict = {
+    "234-2": "/data/disk5/private/yuc/coref/bert-tagger",
+    "cluster": "/home/shiyukai/project/yuc/coref/bert-tagger"
+}
+loc = sys.argv[1]
+if loc in work_dir_dict.keys():
+    WORK_DIR = work_dir_dict[loc]
+else:
+    print("Input: ", loc, "  Valid keys: ", " ".join(work_dir_dict.keys()))
+    exit()
+
 FILE_LIST = os.path.join(WORK_DIR, "playground/filelist.txt")
 WIKI_DIR = os.path.join(WORK_DIR, "../wikipedia/text")
 DUMP_DIR = os.path.join(WORK_DIR, "../wikipedia/parsed-text")
